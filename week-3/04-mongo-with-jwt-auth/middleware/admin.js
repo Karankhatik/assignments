@@ -1,7 +1,28 @@
+const { Admin } = require("../db");
+
 // Middleware for handling auth
+const verifyToken = require("../helper/utils").verifyToken;
 function adminMiddleware(req, res, next) {
     // Implement admin auth logic
-    // You need to check the headers and validate the admin from the admin DB. Check readme for the exact headers to be expected
+
+    const token = req.headers.authorization; // bearer token
+    const words = token.split(" "); // ["Bearer", "token"]
+    const jwtToken = words[1]; // token
+    try {
+        const decodedValue = verifyToken(jwtToken)
+        const findAdmin = Admin.findOne({ username: decodedValue.username });    
+        if (findAdmin) {
+            next();
+        } else {
+            res.status(403).json({
+                msg: "You are not authenticated"
+            })
+        }
+    } catch (e) {
+        res.json({
+            msg: "Incorrect inputs"
+        })
+    }
 }
 
 module.exports = adminMiddleware;
